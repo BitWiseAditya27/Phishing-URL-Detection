@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishShield Pro | AI-Powered Phishing URL Detection</title>
+  <!-- Google Fonts & Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="cyber-bg"></div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="/" class="brand-logo">
+        <div class="brand-badge">
+          <i data-lucide="shield-check" style="width: 22px; height: 22px; color: #fff;"></i>
+        </div>
+        <span>PhishShield <span style="color: var(--accent-cyan);">Pro</span></span>
+      </a>
+
+      <div class="nav-links">
+        <div class="status-pill online">
+          <span class="pulse-dot"></span>
+          <span>Engine v2.0 Active</span>
+        </div>
+        <a href="#analyzer">Scanner</a>
+        <a href="#benchmarks">Model Benchmarks</a>
+        <a href="#features">30 Attributes</a>
+        <a href="#architecture">Architecture</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero Section -->
+    <section class="hero" id="analyzer">
+      <div class="hero-tag">
+        <i data-lucide="cpu" style="width: 14px; height: 14px;"></i>
+        <span>UCI Machine Learning Benchmark (11,055 Samples)</span>
+      </div>
+      <h1 class="hero-title">
+        Enterprise-Grade <br>
+        <span class="gradient-text">Phishing URL Detection System</span>
+      </h1>
+      <p class="hero-subtitle">
+        Analyze hyperlinks in real-time across 30 lexical, host, and content vulnerability indicators using high-precision Gradient Boosted Decision Ensembles.
+      </p>
+
+      <!-- URL Search Form -->
+      <div class="glass-panel url-search-card">
+        <form method="POST" action="/" id="scanForm">
+          <div class="search-input-group">
+            <div class="input-icon">
+              <i data-lucide="link" style="width: 20px; height: 20px;"></i>
+            </div>
+            <input 
+              type="text" 
+              name="url" 
+              id="urlInput"
+              class="url-input" 
+              placeholder="Enter suspicious link (e.g. https://www.paypal.com or http://192.168.1.1/update)" 
+              value="{{ result.url if result else '' }}"
+              required
+              autocomplete="off"
+            >
+            <button type="submit" class="btn-analyze" id="scanBtn">
+              <i data-lucide="scan-line" style="width: 18px; height: 18px;"></i>
+              <span>Scan URL</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="sample-urls">
+          <span>Quick Test Samples:</span>
+          <span class="sample-badge" onclick="setSample('https://www.google.com')">Safe: Google</span>
+          <span class="sample-badge" onclick="setSample('https://github.com')">Safe: GitHub</span>
+          <span class="sample-badge" onclick="setSample('http://192.168.1.1/paypal-account-verify.php@evil.ru')">Phishing: Raw IP + @</span>
+          <span class="sample-badge" onclick="setSample('http://secure-appleid-update-login.servehttp.com')">Phishing: Hyphen Domain</span>
+          <span class="sample-badge" onclick="setSample('http://login.bank-update.free-crypto.xyz/auth')">Phishing: Multi-Subdomain</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scan Results Section -->
+    {% if result %}
+    <section class="glass-panel result-card" id="resultsArea">
+      {% if result.error %}
+      <div class="result-header">
+        <div class="result-verdict">
+          <div class="verdict-icon danger">
+            <i data-lucide="alert-triangle" style="width: 32px; height: 32px;"></i>
+          </div>
+          <div>
+            <h2 class="verdict-title" style="color: var(--accent-rose);">Analysis Error</h2>
+            <p class="verdict-sub">{{ result.error }}</p>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="result-header">
+        <div class="result-verdict">
+          {% if result.is_safe %}
+          <div class="verdict-icon safe">
+            <i data-lucide="shield-check" style="width: 36px; height: 36px;"></i>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <h2 class="verdict-title" style="color: var(--accent-emerald);">Legitimate & Safe URL</h2>
+              <span class="status-pill online">{{ result.risk_badge }}</span>
+            </div>
+            <p class="verdict-sub">No anomalous structural or heuristic phishing traits detected.</p>
+            <div class="tested-url">{{ result.url }}</div>
+          </div>
+          {% else %}
+          <div class="verdict-icon danger">
+            <i data-lucide="shield-alert" style="width: 36px; height: 36px;"></i>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <h2 class="verdict-title" style="color: var(--accent-rose);">Warning: Potential Phishing URL</h2>
+              <span class="status-pill" style="background: rgba(244,63,94,0.15); color: var(--accent-rose); border: 1px solid rgba(244,63,94,0.3);">{{ result.risk_badge }}</span>
+            </div>
+            <p class="verdict-sub">Multiple high-risk phishing vectors flagged in lexical and security checks.</p>
+            <div class="tested-url">{{ result.url }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Probability Gauges -->
+      <div class="metrics-row">
+        <div class="metric-box">
+          <div class="metric-label">Safety Probability</div>
+          <div class="metric-value" style="color: var(--accent-emerald);">{{ result.safety_score }}%</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Phishing Risk Score</div>
+          <div class="metric-value" style="color: var(--accent-rose);">{{ result.phishing_risk }}%</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Features Extracted</div>
+          <div class="metric-value" style="color: var(--accent-cyan);">{{ result.features_count }} / 30</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Model Engine</div>
+          <div class="metric-value" style="font-size: 1.15rem; color: #fff; padding-top: 0.5rem;">Gradient Boosting</div>
+        </div>
+      </div>
+
+      <!-- Safety Progress Bar -->
+      <div class="progress-bar-container">
+        <div 
+          class="progress-bar-fill" 
+          style="width: {{ result.safety_score }}%; background: {% if result.is_safe %}linear-gradient(90deg, #10b981, #06b6d4){% else %}linear-gradient(90deg, #f43f5e, #f59e0b){% endif %};"
+        ></div>
+      </div>
+
+      <!-- 30 Extracted Features Categorized Table -->
+      <h3 style="font-size: 1.25rem; font-weight: 700; margin: 2rem 0 1rem;">Deep Vulnerability Breakdown</h3>
+      <div class="categories-container">
+        {% for cat_name, cat_feats in result.categories.items() %}
+        <div class="category-card">
+          <div class="category-title">
+            <i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-cyan);"></i>
+            <span>{{ cat_name }}</span>
+          </div>
+          <table class="feature-table">
+            <tbody>
+              {% for fname, fmeta in cat_feats.items() %}
+              <tr>
+                <td style="font-weight: 600; width: 38%;">{{ fname }}</td>
+                <td style="color: var(--text-secondary); font-size: 0.775rem;">{{ fmeta.description }}</td>
+                <td style="text-align: right; width: 22%;">
+                  {% if fmeta.value == 1 %}
+                  <span class="feat-tag safe">Safe (+1)</span>
+                  {% elif fmeta.value == 0 %}
+                  <span class="feat-tag suspicious">Neutral (0)</span>
+                  {% else %}
+                  <span class="feat-tag phish">Phish (-1)</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    <!-- ML Benchmarks & Comparison -->
+    <section class="benchmarks-section" id="benchmarks">
+      <div class="section-header">
+        <h2 class="section-title">Machine Learning Model Benchmarks</h2>
+        <p class="section-subtitle">Evaluated on the exact 11,054 benchmark phishing dataset entries with 80/20 stratified split</p>
+      </div>
+
+      <div class="benchmark-grid">
+        {% if meta and meta.models_evaluated %}
+          {% for model_name, metrics in meta.models_evaluated.items() %}
+          <div class="glass-panel benchmark-card {% if model_name == 'Gradient Boosting Classifier' %}best{% endif %}">
+            {% if model_name == 'Gradient Boosting Classifier' %}
+            <span class="best-tag">PRODUCTION MODEL</span>
+            {% endif %}
+            <div class="algo-name">{{ model_name }}</div>
+            <div class="algo-accuracy">{{ metrics.accuracy }}%</div>
+            <div class="algo-details">
+              <div>
+                <span style="display:block; color: var(--text-muted); font-size: 0.7rem;">PRECISION</span>
+                <strong>{{ metrics.precision }}%</strong>
+              </div>
+              <div>
+                <span style="display:block; color: var(--text-muted); font-size: 0.7rem;">RECALL</span>
+                <strong>{{ metrics.recall }}%</strong>
+              </div>
+              <div>
+                <span style="display:block; color: var(--text-muted); font-size: 0.7rem;">F1-SCORE</span>
+                <strong>{{ metrics.f1_score }}%</strong>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Top Predictive Features Radar / List -->
+    <section class="glass-panel" id="features" style="padding: 2.5rem; margin-bottom: 3.5rem;">
+      <div class="section-header" style="text-align: left; margin-bottom: 2rem;">
+        <h2 class="section-title">Top 10 High-Impact Predictive Features</h2>
+        <p class="section-subtitle">Relative Gini-importance weights learned by the Gradient Boosting Decision Trees</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+        {% if meta and meta.feature_importances %}
+          {% for fi in meta.feature_importances[:10] %}
+          <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem;">
+              <strong>{{ loop.index }}. {{ fi.feature }}</strong>
+              <span style="color: var(--accent-cyan); font-family: var(--font-mono);">{{ (fi.importance * 100)|round(2) }}%</span>
+            </div>
+            <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 9999px; overflow: hidden;">
+              <div style="width: {{ fi.importance * 100 * 1.3 }}%; max-width: 100%; height: 100%; background: var(--accent-blue); border-radius: 9999px;"></div>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Architecture & Pipeline Summary -->
+    <section class="glass-panel" id="architecture" style="padding: 2.5rem; margin-bottom: 4rem;">
+      <div class="section-header" style="text-align: left; margin-bottom: 1.5rem;">
+        <h2 class="section-title">End-to-End System Pipeline</h2>
+        <p class="section-subtitle">How raw URLs are transformed into accurate threat detection verdicts</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
+        <div style="padding: 1.25rem; background: rgba(15,23,42,0.4); border-radius: 0.75rem; border-left: 3px solid var(--accent-blue);">
+          <div style="font-weight: 700; color: #fff; margin-bottom: 0.5rem;">1. Ingestion & Sanitation</div>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">URL protocol normalization, authority parsing, domain extraction, and RFC-compliant token validation.</p>
+        </div>
+        <div style="padding: 1.25rem; background: rgba(15,23,42,0.4); border-radius: 0.75rem; border-left: 3px solid var(--accent-cyan);">
+          <div style="font-weight: 700; color: #fff; margin-bottom: 0.5rem;">2. 30-Vector Extraction</div>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">Parallel extraction across lexical properties, SSL certificate tokens, anchor ratios, DNS records, and WHOIS lifetime.</p>
+        </div>
+        <div style="padding: 1.25rem; background: rgba(15,23,42,0.4); border-radius: 0.75rem; border-left: 3px solid var(--accent-emerald);">
+          <div style="font-weight: 700; color: #fff; margin-bottom: 0.5rem;">3. Gradient Boosting Tree</div>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">Ensemble decision tree inference trained on 11,054 benchmark instances with 97.01% empirical accuracy.</p>
+        </div>
+        <div style="padding: 1.25rem; background: rgba(15,23,42,0.4); border-radius: 0.75rem; border-left: 3px solid var(--accent-rose);">
+          <div style="font-weight: 700; color: #fff; margin-bottom: 0.5rem;">4. Risk Classification</div>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">Generation of safety percentages, categorized vulnerability reports, and REST API response payloads.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>PhishShield Pro &bull; Advanced Machine Learning Phishing URL Detection</p>
+      <p style="margin-top: 0.5rem;">Built with Flask, Scikit-Learn, and UCI Phishing Websites Benchmark Dataset.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    function setSample(url) {
+      const input = document.getElementById('urlInput');
+      input.value = url;
+      input.focus();
+    }
+
+    // Auto-scroll to results if present
+    {% if result %}
+    window.addEventListener('DOMContentLoaded', () => {
+      const el = document.getElementById('resultsArea');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+    {% endif %}
+  </script>
+</body>
+</html>
